@@ -25,5 +25,44 @@ model = tf.keras.models.load_model(MODEL_PATH, compile=False)  # モデルの読
 
 # 3 predict 関数：写真を受け取って、判定して、結果を画面に渡す
 
+def predict(request):
 
+    #(1)フォーム送信（POST）の受け取りと画像の保存
+    if request.method == "POST": #画面の判定ボタンが押されてデータが送信されたときの処理
+        form = ImageUploadForm(request.POST, request.FILES)
+        if form.is_valid():  #正しい形式かチェック
+            uploaded_file = request.FILES["image"] #送信された画像ファイルを取り出す
+
+            fs = FileSystemStorage()
+            filename = fs.save(uploaded_file.name, uploaded_file) #受け取った画像をサーバーの media フォルダに保存
+            file_url = fs.url(filename) #アップロードされた画像の URL を作る
+
+            #(2)AIモデル（VGG16）が読める形に画像を加工（前処理）
+            img_path = os.path.join(settings.MEDIA_ROOT, filename) #保存した画像の場所を組み立てる
+            img = image.load_img(img_path, target_size=(100, 100)) #100×100にリサイズして読み込む
+            x = image.img_to_array(img) # 配列に変換
+            x = np.expand_dims(x, axis=0) #バッチ次元を追加
+            x = preprocess_input(x)  # VGG16用の前処理
+
+            #(3)AIモデルによる予測と結果の変換
+            preds = model.predict(x) #加工した画像データをAIモデルに渡し、予測結果を受け取る
+            class_index = np.argmax(preds[0])  # 最も確率の高いクラスのインデックスを取得
+            # クラス名（学習時の順番：0 = lemon、1 = orange）
+            class_names = ["lemon", "orange"]
+            predicted_class = class_names[class_index] #数字の0や1を、"orange" や "lemon" に変換
+
+
+            #(4)結果を home.html に渡して表示
+            return render(
+                request,
+                "home.html",
+                {
+                    "form": form,
+                    "file_url": file_url,
+                    "predicted_class": predicted_class,
+                },
+            )
+    else:
+        form = ImageUploadForm()
+    return render(request, "home.html", {"form": form})
 
