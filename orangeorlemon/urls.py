@@ -14,9 +14,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
+#settings.py に書いた設定を、このファイルで使えるようにする
+from django.conf import settings 
+#アップロードした写真などのファイルを、ブラウザで見られるようにする道具
+from django.conf.urls.static import static 
+
+from django.contrib import admin #Djangoの管理画面（最初から入っている）
+from django.urls import include, path #path はURLと関数をつなぐ道具。include は「この先はアプリの urls.pyにまかせる」道具
+
+
+urlpatterns = [   #このサイトのURLの一覧表を作り始める
+    
+    path("admin/", admin.site.urls),  # 管理画面（最初からある）
+    path("", include("prediction.urls")),  #サイトの入り口は、prediction アプリにまかせる
 ]
+
+if settings.DEBUG:   #開発中（DEBUG = True）のときだけ、この設定を使う
+    urlpatterns += static(   #URLの一覧表に、写真用のつなぎ方を足す
+        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT #/media/ で始まるURLに来たら、media フォルダの中を探す
+        )
