@@ -10,7 +10,7 @@ from django.shortcuts import render  #結果を home.html に渡して表示す�
 import tensorflow as tf #モデルを読み込む
 from tensorflow.keras import layers, models  #層の部品と、層を積み重ねる箱（build_model で使う）
 from tensorflow.keras.applications.vgg16 import preprocess_input, VGG16  #VGG16用の前処理と、VGG16の形
-from tensorflow.keras.preprocessing import image  #写真を読み込んで、100×100にする
+from tensorflow.keras.preprocessing import image  #写真を読み込んで、256×256にする
 from .forms import ImageUploadForm 
 
 
@@ -27,7 +27,7 @@ def build_model():
     vgg16 = VGG16(
         weights=None,   #重み（学習した数字）は空っぽのまま。あとでファイルから読み込むので、ダウンロードしない
         include_top=False,  #1000種類を見分ける最後の部分は外す（Colabと同じ）
-        input_shape=(100, 100, 3)) #入力は100×100ピクセル、カラー（赤・緑・青の3つ）
+        input_shape=(256, 256, 3)) #入力は256×256ピクセル、カラー（赤・緑・青の3つ）
     
     
     # 層を積み重ねる空の箱を作り、VGG16の層を入れる
@@ -69,7 +69,7 @@ def predict(request):
 
             #(2)AIモデル（VGG16）が読める形に画像を加工（前処理）
             img_path = os.path.join(settings.MEDIA_ROOT, filename) #保存した画像の場所を組み立てる
-            img = image.load_img(img_path, target_size=(100, 100)) #100×100にリサイズして読み込む
+            img = image.load_img(img_path, target_size=(256, 256)) #256×256にリサイズして読み込む
             x = image.img_to_array(img) # 配列に変換
             x = np.expand_dims(x, axis=0) #バッチ次元を追加
             x = preprocess_input(x)  # VGG16用の前処理

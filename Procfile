@@ -1,1 +1,1 @@
-web: gunicorn --workers=1 --worker-class=sync catordog.wsgi --timeout 300 --log-file -
+web: gunicorn --workers=1 --worker-class=sync orangeorlemon.wsgi --timeout 300 --log-file -

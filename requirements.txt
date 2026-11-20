@@ -1,5 +1,7 @@
-Django==4.2.1
-tensorflow-cpu==2.15.1
-Pillow==9.5.0
-gunicorn==20.1.0
-numpy==1.25.0
+#アプリを動かすのに必要な道具の買い物リスト
+
+Django==4.2.1 #Webアプリを作るための土台
+tensorflow-cpu==2.15.1 #Deep Learningフレームワーク
+Pillow==9.5.0 #画像を扱うためのライブラリ
+gunicorn==20.1.0 #Herokuでアプリを動かすためのサーバー
+numpy==1.25.0 #数字の表（配列）を計算するためのライブラリ
