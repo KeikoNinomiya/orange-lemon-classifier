@@ -5,8 +5,11 @@ import numpy as np  #写真を、モデルに入れる形にする
 from django.conf import settings  #プロジェクトの場所（BASE_DIR）を使う
 from django.core.files.storage import FileSystemStorage  #アップロードされた写真を保存する
 from django.shortcuts import render  #結果を home.html に渡して表示する
+
+
 import tensorflow as tf #モデルを読み込む
-from tensorflow.keras.applications.vgg16 import preprocess_input  #VGG16用の前処理
+from tensorflow.keras import layers, models  #層の部品と、層を積み重ねる箱（build_model で使う）
+from tensorflow.keras.applications.vgg16 import preprocess_input, VGG16  #VGG16用の前処理と、VGG16の形
 from tensorflow.keras.preprocessing import image  #写真を読み込んで、100×100にする
 from .forms import ImageUploadForm 
 
@@ -19,8 +22,35 @@ MODEL_PATH = os.path.join(
     settings.BASE_DIR, "prediction", "models", "model_100.h5"
 )
 
-#学習用の設定は読み込まない
-model = tf.keras.models.load_model(MODEL_PATH, compile=False)  # モデルの読み込み
+def build_model():
+    # Colabで学習したモデルと同じ形を組み立てる（VGG16 ＋ 独自の層）
+    vgg16 = VGG16(
+        weights=None,   #重み（学習した数字）は空っぽのまま。あとでファイルから読み込むので、ダウンロードしない
+        include_top=False,  #1000種類を見分ける最後の部分は外す（Colabと同じ）
+        input_shape=(100, 100, 3)) #入力は100×100ピクセル、カラー（赤・緑・青の3つ）
+    
+    
+    # 層を積み重ねる空の箱を作り、VGG16の層を入れる
+    model = models.Sequential()
+    for layer in vgg16.layers:
+        model.add(layer)
+
+    # 新しいトップ層を追加
+    model.add(layers.GlobalAveragePooling2D()) #VGG16が見つけた特徴を、平均してまとめる
+    model.add(layers.Dense(256, activation="relu")) #256個の部品で考える層
+    model.add(layers.Dropout(0.5)) #学習中に半分を休ませる層
+    model.add(layers.Dense(2, activation="softmax"))  # 2クラス分類（レモンとオレンジ）
+
+    return model #組み立てたモデルを、関数の外に返す
+
+# まず普通に読み込み、ダメなら形を組み立てて重みだけ読み込む
+try:
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)  # モデルの読み込み
+except Exception as e:
+    # 読み込めないときは、同じ形のモデルを組み立てて、重みだけ読み込む
+    model = build_model()  # モデルの形を組み立てる
+    model.load_weights(MODEL_PATH)  #学習済みの重みを読み込む 
+
 
 
 # 3 predict 関数：写真を受け取って、判定して、結果を画面に渡す
