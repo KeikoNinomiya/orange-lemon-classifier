@@ -17,9 +17,9 @@ from .forms import ImageUploadForm
 # 2 モデルの読み込み：サーバーが起動したときに、1回だけモデルを読み込む
 
 # モデルのファイルの場所を組み立てる
-# 学習済みモデル（model_100.h5）の場所
+# 学習済みモデル（model_256.h5）の場所
 MODEL_PATH = os.path.join(
-    settings.BASE_DIR, "prediction", "models", "model_100.h5"
+    settings.BASE_DIR, "prediction", "models", "model_256.h5"
 )
 
 def build_model():
